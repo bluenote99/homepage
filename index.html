@@ -1,0 +1,1496 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>bluenote | 의료기기 마케팅 시스템 설계 (Medical Device Marketing System Design)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;700;900&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f4fafb;
+            --bg-card: #ffffff;
+            --bg-card-hover: #eef8fa;
+            --text-primary: #1a2b3c;
+            --text-secondary: #5a6f7e;
+            --text-muted: #8da0ad;
+            --accent: #219ebc;
+            --accent-glow: rgba(33, 158, 188, 0.1);
+            --accent-warm: #f7a94a;
+            --border: rgba(33, 158, 188, 0.1);
+            --border-hover: rgba(33, 158, 188, 0.22);
+            --gradient-blue: linear-gradient(135deg, #219ebc, #48b5d0);
+            --gradient-warm: linear-gradient(135deg, #f7a94a, #f7cf4a);
+            --gradient-mesh: radial-gradient(ellipse at 20% 50%, rgba(33, 158, 188, 0.06) 0%, transparent 50%),
+                            radial-gradient(ellipse at 80% 20%, rgba(247, 169, 74, 0.04) 0%, transparent 50%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* ========== NOISE OVERLAY ========== */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.015'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* ========== NAVIGATION ========== */
+        nav {
+            position: fixed;
+            top: 0; left: 0; width: 100%;
+            z-index: 100;
+            padding: 1.25rem 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.85);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .nav-logo {
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+        }
+
+        .nav-logo span {
+            color: var(--accent);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.03em;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover { color: var(--text-primary); }
+
+        .nav-cta {
+            padding: 0.6rem 1.5rem;
+            background: var(--gradient-blue);
+            color: #fff !important;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.3s;
+        }
+
+        .nav-cta:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px rgba(33, 158, 188, 0.3);
+        }
+
+        /* ========== HERO ========== */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8rem 2.5rem 6rem;
+            position: relative;
+            background: var(--gradient-mesh);
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(33, 158, 188, 0.06) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .hero-content {
+            max-width: 900px;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1.2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 2.5rem;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .hero-badge-dot {
+            width: 6px;
+            height: 6px;
+            background: #4ade80;
+            border-radius: 50%;
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 5.5vw, 4.2rem);
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -0.03em;
+            margin-bottom: 1.8rem;
+            animation: fadeInUp 0.8s ease-out 0.1s both;
+        }
+
+        .hero h1 .highlight {
+            background: var(--gradient-blue);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero h1 .highlight-warm {
+            background: var(--gradient-warm);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-sub {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            max-width: 640px;
+            margin: 0 auto 3rem;
+            line-height: 1.8;
+            font-weight: 400;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease-out 0.3s both;
+        }
+
+        .btn-primary {
+            padding: 0.9rem 2.2rem;
+            background: var(--gradient-blue);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.3s;
+            font-family: inherit;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(33, 158, 188, 0.3);
+        }
+
+        .btn-secondary {
+            padding: 0.9rem 2.2rem;
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-hover);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-card);
+            border-color: var(--text-muted);
+        }
+
+        /* ========== STATS BAR ========== */
+        .stats-bar {
+            padding: 3rem 2.5rem;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .stats-grid {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            background: var(--gradient-blue);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+
+        .stat-label-en {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            opacity: 0.6;
+            display: block;
+            margin-top: 0.15rem;
+        }
+
+        /* ========== SECTIONS COMMON ========== */
+        section {
+            padding: 7rem 2.5rem;
+        }
+
+        .section-container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        .section-label-en {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+            margin-left: 0.5rem;
+        }
+
+        .section-title {
+            font-size: clamp(1.8rem, 3vw, 2.5rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.3;
+            margin-bottom: 1rem;
+        }
+
+        .section-desc {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            line-height: 1.8;
+        }
+
+        /* ========== PROBLEM ========== */
+        #problem {
+            background: var(--bg-primary);
+            background-image: var(--gradient-mesh);
+        }
+
+        .problem-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            margin-top: 4rem;
+        }
+
+        .problem-card {
+            padding: 2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .problem-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--gradient-blue);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .problem-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
+            transform: translateX(4px);
+        }
+
+        .problem-card:hover::before { opacity: 1; }
+
+        .problem-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .problem-card h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .problem-card p {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .problem-right {
+            position: relative;
+        }
+
+        .problem-quote {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem;
+            font-style: italic;
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 2.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            position: relative;
+        }
+
+        .problem-quote::before {
+            content: '"';
+            position: absolute;
+            top: -10px;
+            left: 25px;
+            font-size: 5rem;
+            color: var(--accent);
+            opacity: 0.3;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .problem-quote-author {
+            margin-top: 1.5rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-style: normal;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* ========== SERVICES ========== */
+        #services {
+            background: var(--bg-secondary);
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-top: 4rem;
+        }
+
+        .service-card {
+            padding: 2.5rem 2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        .service-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--gradient-blue);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+        }
+
+        .service-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
+            transform: translateY(-4px);
+        }
+
+        .service-card:hover::after { transform: scaleX(1); }
+
+        .service-card.featured {
+            border-color: rgba(33, 158, 188, 0.3);
+            background: linear-gradient(180deg, rgba(33, 158, 188, 0.05), var(--bg-card));
+        }
+
+        .service-tag {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            background: var(--accent-glow);
+            color: var(--accent);
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+        }
+
+        .service-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--accent-glow);
+            border-radius: 12px;
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .service-card h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+
+        .service-card .service-en {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .service-card p {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .service-details {
+            list-style: none;
+            padding: 0;
+        }
+
+        .service-details li {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            padding: 0.4rem 0;
+            padding-left: 1.2rem;
+            position: relative;
+        }
+
+        .service-details li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .service-price {
+            margin-top: 1.5rem;
+            padding-top: 1.2rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .service-price strong {
+            color: var(--text-primary);
+            font-size: 1.1rem;
+        }
+
+        /* ========== PROCESS ========== */
+        #process {
+            background: var(--bg-primary);
+        }
+
+        .process-timeline {
+            margin-top: 4rem;
+            position: relative;
+        }
+
+        .process-timeline::before {
+            content: '';
+            position: absolute;
+            left: 28px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--accent), transparent);
+        }
+
+        .process-step {
+            display: flex;
+            gap: 2.5rem;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .step-number {
+            width: 56px;
+            height: 56px;
+            min-width: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-card);
+            border: 2px solid var(--accent);
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--accent);
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-content {
+            padding-top: 0.6rem;
+        }
+
+        .step-content h4 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+        }
+
+        .step-content .step-en {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .step-content p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            max-width: 600px;
+        }
+
+        .step-duration {
+            display: inline-block;
+            padding: 0.2rem 0.7rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        /* ========== EXPERTISE ========== */
+        #expertise {
+            background: var(--bg-secondary);
+        }
+
+        .expertise-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-top: 4rem;
+        }
+
+        .expertise-item {
+            padding: 2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .expertise-item:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+
+        .expertise-num {
+            font-size: 2rem;
+            font-weight: 800;
+            background: var(--gradient-blue);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .expertise-item h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin: 0.5rem 0 0.3rem;
+        }
+
+        .expertise-item p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* ========== CHANNELS ========== */
+        #channels {
+            background: var(--bg-primary);
+            background-image: var(--gradient-mesh);
+        }
+
+        .channels-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+            margin-top: 4rem;
+        }
+
+        .channel-card {
+            padding: 1.8rem 1.2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .channel-card:hover {
+            border-color: var(--border-hover);
+            background: var(--bg-card-hover);
+        }
+
+        .channel-icon {
+            font-size: 1.8rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .channel-card h4 {
+            font-size: 0.88rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+
+        .channel-card p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .channel-metrics {
+            margin-top: 3rem;
+            padding: 2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            display: flex;
+            justify-content: center;
+            gap: 4rem;
+        }
+
+        .metric {
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .metric-label {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 0.2rem;
+        }
+
+        /* ========== ABOUT / FOUNDER ========== */
+        #about {
+            background: var(--bg-secondary);
+        }
+
+        .about-layout {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 5rem;
+            align-items: start;
+            margin-top: 4rem;
+        }
+
+        .about-profile {
+            position: sticky;
+            top: 8rem;
+        }
+
+        .about-avatar {
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-warm));
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .about-name {
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .about-role {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+        }
+
+        .about-timeline {
+            list-style: none;
+            margin-top: 2rem;
+        }
+
+        .about-timeline li {
+            padding: 0.6rem 0;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 1rem;
+        }
+
+        .about-timeline li span:first-child {
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            min-width: 70px;
+            font-weight: 500;
+        }
+
+        .about-story h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .about-story p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.9;
+            margin-bottom: 1.5rem;
+        }
+
+        .about-story .key-phrase {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* ========== MLAB ========== */
+        #mlab {
+            background: var(--bg-primary);
+        }
+
+        .mlab-card {
+            margin-top: 4rem;
+            padding: 3.5rem;
+            background: linear-gradient(135deg, rgba(33, 158, 188, 0.06), rgba(247, 169, 74, 0.04));
+            border: 1px solid rgba(33, 158, 188, 0.2);
+            border-radius: 24px;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .mlab-content h3 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 0.3rem;
+        }
+
+        .mlab-content .mlab-en {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .mlab-content p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+        }
+
+        .mlab-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .mlab-feature {
+            padding: 1.5rem;
+            background: rgba(33, 158, 188, 0.04);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .mlab-feature h4 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+
+        .mlab-feature p {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        /* ========== CTA ========== */
+        #cta {
+            background: var(--bg-primary);
+            text-align: center;
+            padding: 8rem 2.5rem;
+            position: relative;
+        }
+
+        #cta::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(ellipse at 50% 50%, rgba(33, 158, 188, 0.06), transparent 70%);
+        }
+
+        .cta-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .cta-content h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 1.5rem;
+        }
+
+        .cta-content p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 550px;
+            margin: 0 auto 2.5rem;
+            line-height: 1.8;
+        }
+
+        /* ========== FOOTER ========== */
+        footer {
+            padding: 3rem 2.5rem;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+        }
+
+        .footer-content {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-brand {
+            font-size: 1.1rem;
+            font-weight: 800;
+        }
+
+        .footer-brand span { color: var(--accent); }
+
+        .footer-info {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.82rem;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover { color: var(--text-primary); }
+
+        /* ========== ANIMATIONS ========== */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ========== MOBILE HAMBURGER ========== */
+        .nav-hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 4px;
+        }
+
+        .nav-hamburger span {
+            display: block;
+            width: 22px;
+            height: 2px;
+            background: var(--text-primary);
+            transition: all 0.3s;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 1024px) {
+            .services-grid { grid-template-columns: 1fr 1fr; }
+            .expertise-grid { grid-template-columns: repeat(3, 1fr); }
+            .channels-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            nav { padding: 1rem 1.5rem; }
+
+            .nav-links { display: none; }
+
+            .nav-hamburger { display: flex; }
+
+            .nav-links.active {
+                display: flex;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                flex-direction: column;
+                padding: 1.5rem;
+                background: rgba(255, 255, 255, 0.98);
+                border-bottom: 1px solid var(--border);
+                gap: 1rem;
+            }
+
+            section { padding: 4rem 1.5rem; }
+
+            .hero { padding: 7rem 1.5rem 4rem; }
+
+            .hero h1 { font-size: 2rem; }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
+            }
+
+            .problem-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .services-grid { grid-template-columns: 1fr; }
+
+            .expertise-grid { grid-template-columns: repeat(2, 1fr); }
+
+            .channels-grid { grid-template-columns: repeat(2, 1fr); }
+
+            .channel-metrics {
+                flex-wrap: wrap;
+                gap: 2rem;
+            }
+
+            .about-layout {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+            }
+
+            .about-profile { position: static; }
+
+            .mlab-card {
+                grid-template-columns: 1fr;
+                padding: 2rem;
+            }
+
+            .mlab-features { grid-template-columns: 1fr; }
+
+            .footer-content {
+                flex-direction: column;
+                gap: 1.5rem;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVIGATION -->
+    <nav>
+        <div class="nav-logo">blue<span>note</span></div>
+        <ul class="nav-links" id="navLinks">
+            <li><a href="#services">서비스</a></li>
+            <li><a href="#process">프로세스</a></li>
+            <li><a href="#expertise">전문성</a></li>
+            <li><a href="#about">소개</a></li>
+            <li><a href="#mlab">마케팅 랩</a></li>
+            <li><a href="#cta" class="nav-cta">상담 신청</a></li>
+        </ul>
+        <button class="nav-hamburger" onclick="document.getElementById('navLinks').classList.toggle('active')">
+            <span></span><span></span><span></span>
+        </button>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span class="hero-badge-dot"></span>
+                의료기기 마케팅 시스템 설계 · Medical Device Marketing System Design
+            </div>
+            <h1>
+                사람에 의존하는 마케팅에서<br>
+                <span class="highlight">시스템으로 작동하는</span><br>
+                마케팅으로
+            </h1>
+            <p class="hero-sub">
+                18년 의료기기 업계 경험 · 치료 · 예방 · 진단 전 분야<br>
+                bluenote는 의료기기 회사의 마케팅 본부(Marketing HQ)를 만듭니다.
+            </p>
+            <div class="hero-actions">
+                <a href="#cta" class="btn-primary">전략 상담 신청하기</a>
+                <a href="#services" class="btn-secondary">서비스 살펴보기</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- STATS BAR -->
+    <div class="stats-bar">
+        <div class="stats-grid">
+            <div class="stat-item reveal">
+                <div class="stat-number">18+</div>
+                <div class="stat-label">업계 경력<span class="stat-label-en">Years in Industry</span></div>
+            </div>
+            <div class="stat-item reveal">
+                <div class="stat-number">3,500+</div>
+                <div class="stat-label">의료기기 채널 구독자<span class="stat-label-en">Industry-Specific Subscribers</span></div>
+            </div>
+            <div class="stat-item reveal">
+                <div class="stat-number">300+</div>
+                <div class="stat-label">누적 콘텐츠<span class="stat-label-en">Contents Published</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROBLEM -->
+    <section id="problem">
+        <div class="section-container">
+            <div class="section-label">문제 인식 <span class="section-label-en">THE PROBLEM</span></div>
+            <h2 class="section-title">의료기기 마케팅,<br>왜 항상 제자리일까요?</h2>
+            <div class="problem-grid">
+                <div>
+                    <div class="problem-card reveal">
+                        <div class="problem-icon">🔄</div>
+                        <h4>사람이 바뀌면 마케팅도 리셋</h4>
+                        <p>핵심 담당자가 퇴사하면 전략도, 노하우도 함께 사라집니다. 시스템이 아닌 사람에게 의존하는 구조의 한계입니다.</p>
+                    </div>
+                    <div class="problem-card reveal">
+                        <div class="problem-icon">📊</div>
+                        <h4>전략 없는 실행의 반복</h4>
+                        <p>학회 참석, 영업 미팅, 제품 교육… 바쁘게 움직이지만 하나의 전략으로 연결되지 않습니다.</p>
+                    </div>
+                    <div class="problem-card reveal">
+                        <div class="problem-icon">🎯</div>
+                        <h4>본사 전략과 한국 시장의 괴리</h4>
+                        <p>글로벌 전략을 그대로 적용하기엔 한국 의료 시장의 구조와 의사결정 방식이 다릅니다.</p>
+                    </div>
+                </div>
+                <div class="problem-right reveal">
+                    <div class="problem-quote">
+                        마케팅은 마케터 한 명의 역량이 아니라, 회사의 시스템이어야 합니다.
+                        <div class="problem-quote-author">— bluenote가 S2A를 만든 이유</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SERVICES -->
+    <section id="services">
+        <div class="section-container">
+            <div class="section-label">서비스 <span class="section-label-en">SERVICES</span></div>
+            <h2 class="section-title">Strategy to Action</h2>
+            <p class="section-desc">전략 수립부터 실행 체계 구축까지, 의료기기 회사에 맞춤형 마케팅 HQ를 만듭니다.</p>
+            <div class="services-grid">
+                <div class="service-card reveal">
+                    <div class="service-icon">📋</div>
+                    <div class="service-tag">Phase 1</div>
+                    <h3>마케팅 제안서</h3>
+                    <div class="service-en">Marketing Proposal</div>
+                    <p>시장 분석, 경쟁 환경 파악, 포지셔닝 전략 수립을 통해 실행 가능한 마케팅 로드맵을 제안합니다.</p>
+                    <ul class="service-details">
+                        <li>시장 조사 및 경쟁 분석 (Market Research)</li>
+                        <li>포지셔닝 전략 도출 (Positioning)</li>
+                        <li>키 메시지 개발 (Key Messaging)</li>
+                        <li>마케팅 실행 로드맵</li>
+                    </ul>
+                </div>
+                <div class="service-card featured reveal">
+                    <div class="service-icon">⚙️</div>
+                    <div class="service-tag">Phase 2 · Core</div>
+                    <h3>전략 실행 컨설팅(S2A)</h3>
+                    <div class="service-en">Strategy to Action Consulting</div>
+                    <p>제안서를 기반으로 마케팅 시스템을 실제로 구축합니다. 담당자가 바뀌어도 작동하는 마케팅 HQ를 만듭니다.</p>
+                    <ul class="service-details">
+                        <li>맞춤형 마케팅 시스템 설계</li>
+                        <li>실행 프레임워크 구축</li>
+                        <li>팀 역량 강화 및 트레이닝</li>
+                        <li>KPI 설정 및 성과 관리 체계</li>
+                    </ul>
+                </div>
+                <div class="service-card reveal">
+                    <div class="service-icon">🔬</div>
+                    <div class="service-tag">Phase 3</div>
+                    <h3>마케팅 랩(mlab)</h3>
+                    <div class="service-en">Marketing Lab Membership</div>
+                    <p>전략 실행 컨설팅(S2A)으로 구축한 마케팅 HQ를 지속적으로 유지·발전시키는 커뮤니티 기반 운영 지원 프로그램입니다.</p>
+                    <ul class="service-details">
+                        <li>마케팅 HQ 유지·운영 지원</li>
+                        <li>업계 트렌드 및 인사이트 공유</li>
+                        <li>동료 마케터 네트워킹</li>
+                        <li>정기 워크숍 및 피드백 세션</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PROCESS -->
+    <section id="process">
+        <div class="section-container">
+            <div class="section-label">진행 방식 <span class="section-label-en">PROCESS</span></div>
+            <h2 class="section-title">사람 → 시스템으로의 전환</h2>
+            <p class="section-desc">bluenote의 컨설팅은 단순 전략 보고서가 아닙니다. 실행 가능한 시스템으로 만들어 드립니다.</p>
+            <div class="process-timeline">
+                <div class="process-step reveal">
+                    <div class="step-number">01</div>
+                    <div class="step-content">
+                        <h4>진단 & 현황 분석</h4>
+                        <div class="step-en">Diagnosis & Assessment</div>
+                        <p>현재 마케팅 구조, 리소스, 시장 내 위치를 진단합니다. 무엇이 작동하고, 무엇이 누락되었는지 파악합니다.</p>
+                        <span class="step-duration">1–2주</span>
+                    </div>
+                </div>
+                <div class="process-step reveal">
+                    <div class="step-number">02</div>
+                    <div class="step-content">
+                        <h4>전략 수립 & 포지셔닝</h4>
+                        <div class="step-en">Strategy & Positioning</div>
+                        <p>시장 맥락에 맞는 차별화된 포지셔닝을 설계합니다. 경쟁사 대비 명확한 키 메시지를 개발합니다.</p>
+                        <span class="step-duration">2–3주</span>
+                    </div>
+                </div>
+                <div class="process-step reveal">
+                    <div class="step-number">03</div>
+                    <div class="step-content">
+                        <h4>시스템 구축</h4>
+                        <div class="step-en">System Building</div>
+                        <p>마케팅 HQ로서 작동할 수 있는 프레임워크를 구축합니다. 재현 가능하고, 누가 해도 일정 수준 이상의 결과를 만드는 구조입니다.</p>
+                        <span class="step-duration">6–10주</span>
+                    </div>
+                </div>
+                <div class="process-step reveal">
+                    <div class="step-number">04</div>
+                    <div class="step-content">
+                        <h4>실행 & 이양</h4>
+                        <div class="step-en">Execution & Handover</div>
+                        <p>시스템을 실제로 가동하고, 내부 팀이 자체 운영할 수 있도록 트레이닝합니다. 이후 마케팅 랩(mlab)을 통해 지속 지원합니다.</p>
+                        <span class="step-duration">2–4주</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- EXPERTISE -->
+    <section id="expertise">
+        <div class="section-container">
+            <div class="section-label">전문 분야 <span class="section-label-en">EXPERTISE</span></div>
+            <h2 class="section-title">의료기기 마케팅의 전 영역을 경험했습니다</h2>
+            <div class="expertise-grid">
+                <div class="expertise-item reveal">
+                    <div class="expertise-num">18년</div>
+                    <h4>의료기기 업계 경력</h4>
+                    <p>Medical Device Industry Experience</p>
+                </div>
+                <div class="expertise-item reveal">
+                    <div class="expertise-num">3개</div>
+                    <h4>치료 · 예방 · 진단 분야</h4>
+                    <p>Treatment · Prevention · Diagnostics</p>
+                </div>
+                <div class="expertise-item reveal">
+                    <div class="expertise-num">5개+</div>
+                    <h4>진료과 협업 경험</h4>
+                    <p>Cardiology · Radiology · NS · VS · GS</p>
+                </div>
+                <div class="expertise-item reveal">
+                    <div class="expertise-num">300+</div>
+                    <h4>업계 인사이트 콘텐츠</h4>
+                    <p>Industry Content Published</p>
+                </div>
+                <div class="expertise-item reveal">
+                    <div class="expertise-num">4년+</div>
+                    <h4>창업 & 컨설팅</h4>
+                    <p>Entrepreneurship & Consulting</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CHANNELS -->
+    <section id="channels">
+        <div class="section-container">
+            <div class="section-label">채널 <span class="section-label-en">CHANNELS</span></div>
+            <h2 class="section-title">의료기기 마케팅 콘텐츠 생태계</h2>
+            <p class="section-desc">5개 채널에서 의료기기 마케팅에 대한 인사이트를 공유합니다.</p>
+            <div class="channels-grid">
+                <div class="channel-card reveal">
+                    <div class="channel-icon">💼</div>
+                    <h4>LinkedIn</h4>
+                    <p>숏폼 인사이트</p>
+                </div>
+                <div class="channel-card reveal">
+                    <div class="channel-icon">📧</div>
+                    <h4>뉴스레터</h4>
+                    <p>매주 딥다이브 콘텐츠</p>
+                </div>
+                <div class="channel-card reveal">
+                    <div class="channel-icon">🎬</div>
+                    <h4>YouTube</h4>
+                    <p>의료기기 노트</p>
+                </div>
+                <div class="channel-card reveal">
+                    <div class="channel-icon">✍️</div>
+                    <h4>브런치</h4>
+                    <p>롱폼 아티클</p>
+                </div>
+                <div class="channel-card reveal">
+                    <div class="channel-icon">🧵</div>
+                    <h4>스레드</h4>
+                    <p>일상 인사이트</p>
+                </div>
+            </div>
+            <div class="channel-metrics reveal">
+                <div class="metric">
+                    <div class="metric-value">3,500+</div>
+                    <div class="metric-label">의료기기 채널 총 구독자 (Industry-Specific Subscribers)</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">300+</div>
+                    <div class="metric-label">누적 콘텐츠 (Contents Published)</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">5개</div>
+                    <div class="metric-label">운영 채널 (Active Channels)</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about">
+        <div class="section-container">
+            <div class="section-label">소개 <span class="section-label-en">ABOUT</span></div>
+            <h2 class="section-title">Founder</h2>
+            <div class="about-layout">
+                <div class="about-profile reveal">
+                    <div class="about-avatar">♪</div>
+                    <div class="about-name">김유정</div>
+                    <div class="about-role">bluenote Marketer & Founder</div>
+                    <ul class="about-timeline">
+                        <li><span>2008–2021</span>외국계 의료기기 & 스타트업 (세일즈 → 마케팅)</li>
+                        <li><span>2021.11</span>bluenote 창업</li>
+                        <li><span>2022</span>YouTube · 브런치 콘텐츠 생산</li>
+                        <li><span>2023</span>오프라인 강의 · 온라인 플랫폼</li>
+                        <li><span>2024</span>기업 강의 · 엑셀러레이터 멘토</li>
+                        <li><span>2025</span>전략 실행 컨설팅(S2A) · 마케팅 랩(mlab) 런칭</li>
+                    </ul>
+                </div>
+                <div class="about-story reveal">
+                    <h3>사람에서 시스템으로,<br>그 전환을 설계합니다</h3>
+                    <p>
+                        외국계 의료기기 회사에서 <span class="key-phrase">세일즈 4년, 마케팅 12년</span>. 
+                        대학병원 순환기내과, 영상의학과, 신경외과, 혈관외과, 일반외과까지 — 
+                        혈전 예방 디바이스부터 에스테틱 기기까지 다양한 제품과 시장을 직접 개척했습니다.
+                    </p>
+                    <p>
+                        2021년 독립 후, <span class="key-phrase">콘텐츠와 교육을 통해 의료기기 업계에 마케팅 언어를 만들어왔습니다</span>. 
+                        유튜브 66편, 브런치 114편, 링크드인·스레드 숏폼 300편, 뉴스레터 매주 발행 — 
+                        4년간 쌓아온 콘텐츠가 지금의 전문성을 증명합니다.
+                    </p>
+                    <p>
+                        기업 강의, 독일 스타트업 엑셀러레이터 멘토링, 그리고 전략 실행 컨설팅(S2A)까지 — 
+                        <span class="key-phrase">bluenote의 핵심은 '재현 가능한 마케팅 시스템'을 만드는 것</span>입니다.
+                        한 사람의 능력에 의존하지 않는, 회사의 자산이 되는 마케팅 체계를 구축합니다.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MLAB -->
+    <section id="mlab">
+        <div class="section-container">
+            <div class="section-label">커뮤니티 <span class="section-label-en">COMMUNITY</span></div>
+            <h2 class="section-title">의료기기 마케팅 랩(mlab)</h2>
+            <div class="mlab-card reveal">
+                <div class="mlab-content">
+                    <h3>마케팅 랩(mlab)</h3>
+                    <div class="mlab-en">Medical Device Marketing Lab</div>
+                    <p>
+                        전략 실행 컨설팅(S2A)으로 구축한 마케팅 HQ가 계속 진화하도록.
+                        의료기기 마케터들이 함께 성장하는 유료 커뮤니티입니다.
+                    </p>
+                    <a href="#cta" class="btn-primary" style="display:inline-block; margin-top:1rem;">마케팅 랩 알아보기</a>
+                </div>
+                <div class="mlab-features">
+                    <div class="mlab-feature">
+                        <h4>🎯 마케팅 HQ 운영</h4>
+                        <p>구축한 시스템의 지속적 유지·발전 지원</p>
+                    </div>
+                    <div class="mlab-feature">
+                        <h4>📈 트렌드 인사이트</h4>
+                        <p>의료기기 시장 변화와 마케팅 트렌드 공유</p>
+                    </div>
+                    <div class="mlab-feature">
+                        <h4>👥 네트워킹</h4>
+                        <p>의료기기 마케터 동료 네트워크</p>
+                    </div>
+                    <div class="mlab-feature">
+                        <h4>💡 워크숍</h4>
+                        <p>실전 마케팅 워크숍 및 피드백 세션</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section id="cta">
+        <div class="cta-content">
+            <div class="section-label">시작하기 <span class="section-label-en">GET STARTED</span></div>
+            <h2>마케팅이 시스템으로<br>작동하는 경험을 시작하세요</h2>
+            <p>
+                의료기기 마케팅에 대한 고민이 있으시다면,<br>
+                bluenote와 대화를 시작해보세요.
+            </p>
+            <div class="hero-actions">
+                <a href="mailto:contact@bluenote.co.kr" class="btn-primary">상담 신청하기</a>
+                <a href="#channels" class="btn-secondary">콘텐츠 먼저 보기</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-content">
+            <div>
+                <div class="footer-brand">blue<span>note</span></div>
+                <div class="footer-info">의료기기 마케팅 시스템 설계 · Medical Device Marketing System Design</div>
+            </div>
+            <div class="footer-links">
+                <a href="#">LinkedIn</a>
+                <a href="#">YouTube</a>
+                <a href="#">뉴스레터</a>
+                <a href="#">브런치</a>
+                <a href="#">스레드</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCROLL REVEAL -->
+    <script>
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+        // Smooth scroll for nav links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    document.getElementById('navLinks').classList.remove('active');
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
